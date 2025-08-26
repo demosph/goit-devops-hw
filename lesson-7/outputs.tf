@@ -65,3 +65,8 @@ output "eks_node_role_arn" {
   description = "IAM role ARN для EKS Worker Nodes"
   value       = module.eks.eks_node_role_arn
 }
+
+output "eks_addons" {
+  description = "Встановлені EKS додатки"
+  value       = module.eks.eks_addons
+}

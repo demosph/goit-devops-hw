@@ -1,4 +1,4 @@
- terraform {
+terraform {
   backend "s3" {
     bucket         = "goit-tfstate-bucket"
     key            = "lesson-5/terraform.tfstate"
@@ -6,8 +6,4 @@
     dynamodb_table = "terraform-locks"
     encrypt        = true
   }
- }
-
-provider "aws" {
-  region = "us-east-2"
 }

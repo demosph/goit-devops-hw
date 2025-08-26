@@ -37,3 +37,15 @@ variable "min_size" {
   description = "Minimum number of worker nodes"
   default     = 1
 }
+
+variable "ebs_csi_driver_version" {
+  description = "Version of aws-ebs-csi-driver addon (use aws console/CLI to see latest eksbuild)"
+  type        = string
+  default     = "v1.48.0-eksbuild.1"
+}
+
+variable "eks_pod_identity_agent_version" {
+  description = "Version of eks-pod-identity-agent addon"
+  type        = string
+  default     = "v1.3.8-eksbuild.2"
+}

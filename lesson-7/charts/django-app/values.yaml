@@ -1,19 +1,39 @@
+replicaCount: 2  # використовується, якщо autoscaling.enabled = false
+
 image:
-  repository: your-registry/your-django-image
+  repository: 265766434317.dkr.ecr.us-east-2.amazonaws.com/lesson-7-ecr
   tag: latest
   pullPolicy: IfNotPresent
 
 service:
-  type: ClusterIP
+  type: LoadBalancer   # зовнішній доступ
   port: 8000
 
 ingress:
   enabled: false
 
+# Змінні середовища для Deployment
+workingDir: "/app/goit"
+
+# Змінні середовища для ConfigMap
 config:
-	POSTGRES_PORT: 5432
-	POSTGRES_HOST: db
-	POSTGRES_PORT: 5432
-	POSTGRES_USER: django_user
-	POSTGRES_DB: django_db
-	POSTGRES_PASSWORD: pass9764gd
+  POSTGRES_HOST: db-postgresql.database.svc.cluster.local
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: django_user
+  POSTGRES_DB: django_db
+  POSTGRES_PASSWORD: pass9764gd
+
+# Змінні середовища для HPA за CPU: мають бути requests
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
