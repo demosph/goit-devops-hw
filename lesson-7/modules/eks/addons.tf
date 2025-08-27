@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-# IAM роль для EKS Pod Identity → EBS CSI Driver
+# IAM роль для EKS Pod Identity -> EBS CSI Driver
 resource "aws_iam_role" "ebs_csi_pod_identity_role" {
   name = "${var.cluster_name}-AmazonEBSCSIDriverRole"
 
@@ -36,7 +36,6 @@ resource "aws_eks_addon" "ebs_csi_driver" {
   cluster_name                = aws_eks_cluster.eks.name
   addon_name                  = "aws-ebs-csi-driver"
   addon_version               = var.ebs_csi_driver_version
-  service_account_role_arn    = aws_iam_role.ebs_csi_pod_identity_role.arn
   resolve_conflicts_on_update = "OVERWRITE"
 
   depends_on = [
@@ -54,6 +53,7 @@ resource "aws_eks_pod_identity_association" "ebs_csi_controller" {
   role_arn        = aws_iam_role.ebs_csi_pod_identity_role.arn
 
   depends_on = [
+    aws_eks_node_group.general,
     aws_eks_addon.pod_identity_agent,
     aws_eks_addon.ebs_csi_driver
   ]

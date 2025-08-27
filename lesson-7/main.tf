@@ -33,3 +33,15 @@ module "eks" {
   max_size      = 4                         # Максимальна кількість нодів
   min_size      = 2                         # Мінімальна кількість нодів
 }
+
+module "k8s_baseline" {
+  source = "./modules/k8s-baseline"
+
+  providers = {
+    kubernetes = kubernetes.eks
+  }
+
+  depends_on = [
+    module.eks
+  ]
+}
