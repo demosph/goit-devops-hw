@@ -5,6 +5,8 @@
 - **S3** бакет і **DynamoDB** таблиця для remote backend стану Terraform.
 - Базова **VPC** з публічними та приватними підмережами і маршрутизацією.
 - **ECR** репозиторій з авто-скануванням образів та політикою доступу.
+- **EKS** кластер з нод группою, IAM ролями та необхідними аддонами
+- **Helm-чарт** Django-застосунку
 
 ### Структура проєкту
 
@@ -75,6 +77,7 @@ $creds = Get-STSSessionToken -AccessKey <AWS_ACCESS_KEY> -SecretKey <AWS_SECRET_
 $env:AWS_ACCESS_KEY_ID     = $creds.AccessKeyId
 $env:AWS_SECRET_ACCESS_KEY = $creds.SecretAccessKey
 $env:AWS_SESSION_TOKEN     = $creds.SessionToken
+
 # (опційно) регіон
 $env:AWS_REGION = "us-east-2"
 ```
@@ -129,6 +132,7 @@ terraform apply
 ```
 # Оновлення токена для kubernetes провайдера
 terraform apply -refresh-only -target="data.aws_eks_cluster_auth.demo"
+
 # Знищення всіх ресурсів
 terraform destroy
 ```
@@ -283,3 +287,4 @@ kubectl top pods -n default
 kubectl get hpa -n default
 kubectl describe hpa django-app-django -n default
 ```
+
