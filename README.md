@@ -127,6 +127,9 @@ terraform apply
 4. Знищення ресурсів
 
 ```
+# Оновлення токена для kubernetes провайдера
+terraform apply -refresh-only -target="data.aws_eks_cluster_auth.demo"
+# Знищення всіх ресурсів
 terraform destroy
 ```
 
@@ -180,9 +183,10 @@ terraform destroy
   - **Managed Node Group** `(aws_eks_node_group.general)` з типом інстансів, масштабуванням і мітками вузлів.
 
   **Add-ons:**
-    - **Amazon EBS CSI Driver** (`aws-ebs-csi-driver`) — керує EBS-томами для PVC/PV.
-    - **EKS Pod Identity Agent** (`eks-pod-identity-agent`) — видача AWS-креденшіалів подам без OIDC/IRSA.
-    - **metrics-server** — збір метрик CPU/Memory для kubectl top та HPA.
+
+  - **Amazon EBS CSI Driver** (`aws-ebs-csi-driver`) — керує EBS-томами для PVC/PV.
+  - **EKS Pod Identity Agent** (`eks-pod-identity-agent`) — видача AWS-креденшіалів подам без OIDC/IRSA.
+  - **metrics-server** — збір метрик CPU/Memory для kubectl top та HPA.
 
 **Навіщо:** керований Kubernetes-кластер на AWS з мінімально необхідними IAM-ролями/політиками та одним керованим пулом вузлів.
 **Ключові ресурси:** `aws_iam_role`, `aws_iam_role_policy_attachment`, `aws_eks_cluster`, `aws_eks_node_group`.
@@ -237,6 +241,7 @@ DNS ім’я сервісу в кластері: `db-postgresql.database.svc.cl
 #### 3. Розгорнути кастомний Helm-чарт django-app
 
 У цьому чарті:
+
 - Service типу LoadBalancer для зовнішнього доступу
 - HPA (autoscaling/v2) 2..6 реплік за CPU > 70%
 - ConfigMap з env (включно з параметрами підключення до Postgres)
@@ -255,7 +260,7 @@ kubectl logs deploy/django-app-django -n default --tail=100
 Якщо ви щойно запушили новий тег образу, передайте його через `--set image.tag=<tag>`.
 Якщо лишили тег `latest`, примусьте пул: `--set image.pullPolicy=Always та kubectl rollout restart deploy/django-app-django`.
 
-####  4. Отримати публічний hostname застосунку
+#### 4. Отримати публічний hostname застосунку
 
 `kubectl get svc django-app-django -n default -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}'`
 
