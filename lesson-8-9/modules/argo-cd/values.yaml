@@ -1,22 +1,17 @@
 server:
   service:
     type: LoadBalancer
-    port: 80
-    ports:
-      http: 80
-      https: 443
-    annotations: {}
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
-    externalTrafficPolicy: Cluster
+    port: 443
 
-  extraArgs:
-    - --insecure
-  config:
-    server.insecure: "true"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
 
-  ingress:
-    enabled: false
-
-dex:
-  enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

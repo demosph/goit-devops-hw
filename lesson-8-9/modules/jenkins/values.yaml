@@ -58,7 +58,7 @@ controller:
                       scope: GLOBAL
                       id: github-token
                       username: demosph
-                      password: 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
+                      password: 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
                       description: GitHub PAT
       seed-job: |
         jobs:

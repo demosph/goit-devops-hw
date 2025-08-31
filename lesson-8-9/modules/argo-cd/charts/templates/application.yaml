@@ -8,13 +8,13 @@ spec:
   project: {{ .project }}
   source:
     repoURL: {{ .source.repoURL }}
-    targetRevision: {{ .source.targetRevision }}
     path: {{ .source.path }}
+    targetRevision: {{ .source.targetRevision }}
     helm:
       valueFiles:
-        {{- range .source.helm.valueFiles }}
-        - {{ . }}
-        {{- end }}
+      {{- range .source.helm.valueFiles }}
+        - {{ . | quote }}
+      {{- end }}
   destination:
     server: {{ .destination.server }}
     namespace: {{ .destination.namespace }}
@@ -22,4 +22,5 @@ spec:
     automated:
       prune: {{ .syncPolicy.automated.prune }}
       selfHeal: {{ .syncPolicy.automated.selfHeal }}
+---
 {{- end }}

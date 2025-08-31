@@ -1,7 +1,7 @@
 replicaCount: 2  # використовується, якщо autoscaling.enabled = false
 
 image:
-  repository: 265766434317.dkr.ecr.us-east-2.amazonaws.com/lesson-7-ecr
+  repository: 265766434317.dkr.ecr.us-east-2.amazonaws.com/django-app
   tag: latest
   pullPolicy: IfNotPresent
 

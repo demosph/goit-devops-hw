@@ -29,7 +29,7 @@ module "eks" {
   subnet_ids    = module.vpc.public_subnets # ID підмереж
   instance_type = "t3.small"                # Тип інстансів
   region        = "us-east-2"               # Регіон
-  desired_size  = 2                         # Бажана кількість нодів
+  desired_size  = 3                         # Бажана кількість нодів
   max_size      = 4                         # Максимальна кількість нодів
   min_size      = 2                         # Мінімальна кількість нодів
 }

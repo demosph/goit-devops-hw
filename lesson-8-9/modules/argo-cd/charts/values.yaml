@@ -4,7 +4,7 @@ applications:
     project: default
     source:
       repoURL: https://github.com/demosph/goit-devops-hw.git
-      path: charts/django-app
+      path: lesson-8-9/charts/django-app
       targetRevision: lesson-8-9
       helm:
         valueFiles:
@@ -19,10 +19,10 @@ applications:
 
 repositories:
   - name: django-app
+    namespace: argocd
     url: https://github.com/demosph/goit-devops-hw.git
-    type: git
     username: demosph
-    password: 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
+    password: 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
 
 repoConfig:
   insecure: "true"

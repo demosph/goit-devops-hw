@@ -13,13 +13,13 @@ resource "helm_release" "argo_cd" {
 }
 
 resource "helm_release" "argo_apps" {
-  name       = "${var.name}-apps"
-  chart      = "${path.module}/charts"
-  namespace  = var.namespace
+  name             = "${var.name}-apps"
+  chart            = "${path.module}/charts"
+  namespace        = var.namespace
   create_namespace = false
 
   values = [
-    file("${path.module}/charts/values.yaml")
+    file("${path.module}/values.yaml")
   ]
   depends_on = [helm_release.argo_cd]
 }
