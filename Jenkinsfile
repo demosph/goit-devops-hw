@@ -43,5 +43,27 @@ spec:
         }
       }
     }
+    stage('Update Chart Tag in Git') {
+      steps {
+        container('git') {
+          withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PAT')]) {
+            sh '''
+              REPO_URL="https://$GIT_USERNAME:$GIT_PAT@github.com/demosph/goit-devops-hw.git"
+              git clone --branch lesson-8-9 "$REPO_URL"
+              cd goit-devops-hw/lesson-8-9/charts/django-app
+
+              sed -i "s/tag: .*/tag: $IMAGE_TAG/" values.yaml
+
+              git config user.email "$COMMIT_EMAIL"
+              git config user.name "$COMMIT_NAME"
+
+              git add values.yaml
+              git commit -m "Update image tag to $IMAGE_TAG" || echo "No changes to commit."
+              git push origin lesson-8-9
+            '''
+          }
+        }
+      }
+    }
   }
 }
