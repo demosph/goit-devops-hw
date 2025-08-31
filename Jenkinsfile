@@ -17,6 +17,13 @@ spec:
         - sleep
       args:
         - 99d
+    - name: git
+      image: alpine/git:2.45.2
+      imagePullPolicy: Always
+      command:
+        -sleep
+      args:
+        - 99d
 """
     }
   }
@@ -25,6 +32,9 @@ spec:
     ECR_REGISTRY = "265766434317.dkr.ecr.us-east-2.amazonaws.com"
     IMAGE_NAME   = "django-app"
     IMAGE_TAG    = "latest"
+
+    COMMIT_EMAIL = "jenkins@localhost"
+    COMMIT_NAME  = "jenkins"
   }
 
   stages {
@@ -36,7 +46,7 @@ spec:
               --context $(pwd)/docker/django \\
               --dockerfile Dockerfile \\
               --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \\
-              --cache=true \\
+              --cache=false \\
               --insecure \\
               --skip-tls-verify
           '''
@@ -50,14 +60,14 @@ spec:
             sh '''
               REPO_URL="https://$GIT_USERNAME:$GIT_PAT@github.com/demosph/goit-devops-hw.git"
               git clone --branch lesson-8-9 "$REPO_URL"
-              cd goit-devops-hw/lesson-8-9/charts/django-app
+              cd goit-devops-hw
 
-              sed -i "s/tag: .*/tag: $IMAGE_TAG/" values.yaml
+              sed -i 's/^\\s*tag:\\s*.*/  tag: '"$IMAGE_TAG"'/' lesson-8-9/charts/django-app/values.yaml
 
               git config user.email "$COMMIT_EMAIL"
               git config user.name "$COMMIT_NAME"
 
-              git add values.yaml
+              git add lesson-8-9/charts/django-app/values.yaml
               git commit -m "Update image tag to $IMAGE_TAG" || echo "No changes to commit."
               git push origin lesson-8-9
             '''
