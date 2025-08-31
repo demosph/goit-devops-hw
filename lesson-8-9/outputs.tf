@@ -80,3 +80,13 @@ output "jenkins_release" {
 output "jenkins_namespace" {
   value = module.jenkins.jenkins_namespace
 }
+
+#-------------Argo CD-----------------
+
+output "argo_cd_server_service" {
+  value = module.argo_cd.argo_cd_server_service
+}
+
+output "argo_cd_admin_password" {
+  value = module.argo_cd.admin_password
+}

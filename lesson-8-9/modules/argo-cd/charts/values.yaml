@@ -1,0 +1,29 @@
+applications:
+  - name: django-app
+    namespace: default
+    project: default
+    source:
+      repoURL: https://github.com/demosph/goit-devops-hw.git
+      path: charts/django-app
+      targetRevision: lesson-8-9
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: default
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+
+repositories:
+  - name: goit-devops-hw
+    url: https://github.com/demosph/goit-devops-hw.git
+    type: git
+    username: demosph
+    password: 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
+
+repoConfig:
+  insecure: "true"
+  enableLfs: "true"

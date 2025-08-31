@@ -62,3 +62,14 @@ module "jenkins" {
     module.eks
   ]
 }
+
+# Підключаємо модуль Argo CD
+module "argo_cd" {
+  source       = "./modules/argo-cd"
+  namespace    = "argocd"
+  chart_version = "5.46.4"
+
+  depends_on = [
+    module.eks
+  ]
+}
