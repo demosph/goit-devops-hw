@@ -1,0 +1,21 @@
+{{- range .Values.repositories }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argo-repo-{{ .name }}
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+stringData:
+  type: {{ .type }}
+  url: {{ .url }}
+  username: {{ .username }}
+  password: {{ .password }}
+  {{- if $.Values.repoConfig.insecure }}
+  insecure: "{{ $.Values.repoConfig.insecure }}"
+  {{- end }}
+  {{- if $.Values.repoConfig.enableLfs }}
+  enableLfs: "{{ $.Values.repoConfig.enableLfs }}"
+  {{- end }}
+{{- end }}

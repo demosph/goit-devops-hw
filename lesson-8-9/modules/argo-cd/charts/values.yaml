@@ -1,6 +1,6 @@
 applications:
   - name: django-app
-    namespace: default
+    namespace: argocd
     project: default
     source:
       repoURL: https://github.com/demosph/goit-devops-hw.git
@@ -18,7 +18,7 @@ applications:
         selfHeal: true
 
 repositories:
-  - name: goit-devops-hw
+  - name: django-app
     url: https://github.com/demosph/goit-devops-hw.git
     type: git
     username: demosph

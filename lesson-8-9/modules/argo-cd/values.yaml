@@ -1,0 +1,22 @@
+server:
+  service:
+    type: LoadBalancer
+    port: 80
+    ports:
+      http: 80
+      https: 443
+    annotations: {}
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    externalTrafficPolicy: Cluster
+
+  extraArgs:
+    - --insecure
+  config:
+    server.insecure: "true"
+
+  ingress:
+    enabled: false
+
+dex:
+  enabled: false
