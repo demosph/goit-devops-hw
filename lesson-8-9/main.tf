@@ -18,7 +18,7 @@ module "vpc" {
 # Підключаємо модуль ECR
 module "ecr" {
   source       = "./modules/ecr"
-  ecr_name     = "lesson-7-ecr"
+  ecr_name     = "django-app"
   scan_on_push = true
 }
 
