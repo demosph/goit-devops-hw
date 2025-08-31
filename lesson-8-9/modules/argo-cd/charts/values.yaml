@@ -22,7 +22,7 @@ repositories:
     namespace: argocd
     url: https://github.com/demosph/goit-devops-hw.git
     username: demosph
-    password: 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
+    password: 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
 
 repoConfig:
   insecure: "true"
