@@ -21,7 +21,7 @@ spec:
       image: alpine/git:2.45.2
       imagePullPolicy: Always
       command:
-        -sleep
+        - sleep
       args:
         - 99d
 """
@@ -76,4 +76,5 @@ spec:
       }
     }
   }
+
 }
