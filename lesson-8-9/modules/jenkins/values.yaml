@@ -1,4 +1,10 @@
 controller:
+  image:
+    registry: docker.io
+    repository: jenkins/jenkins
+    tag: latest
+    pullPolicy: IfNotPresent
+
   admin:
     username: admin
     password: admin123
@@ -39,6 +45,10 @@ controller:
 
   JCasC:
     configScripts:
+      dsl-security: |
+        security:
+          globalJobDslSecurityConfiguration:
+            useScriptSecurity: false
       credentials: |
         credentials:
           system:

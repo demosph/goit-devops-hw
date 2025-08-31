@@ -57,4 +57,8 @@ module "jenkins" {
   providers = {
     helm = helm
   }
+
+  depends_on = [
+    module.eks
+  ]
 }

@@ -1,21 +1,26 @@
-# Дані кластера для конфігурації Kubernetes provider
-data "aws_eks_cluster_auth" "demo" {
-  name = module.eks.eks_cluster_name
-  depends_on = [
-    module.eks
-  ]
-}
-
 provider "kubernetes" {
   host                   = module.eks.eks_cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.eks_cluster_ca)
-  token                  = data.aws_eks_cluster_auth.demo.token
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1"
+    command     = "aws"
+    args        = ["eks", "get-token",
+                   "--cluster-name", module.eks.eks_cluster_name,
+                   "--region", "us-east-2"]
+  }
 }
 
 provider "helm" {
   kubernetes = {
     host                   = module.eks.eks_cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.eks_cluster_ca)
-    token                  = data.aws_eks_cluster_auth.demo.token
+    exec = {
+      api_version = "client.authentication.k8s.io/v1"
+      command     = "aws"
+      args        = ["eks", "get-token",
+                     "--cluster-name", module.eks.eks_cluster_name,
+                     "--region", "us-east-2"]
+    }
   }
 }
