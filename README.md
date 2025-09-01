@@ -341,28 +341,25 @@ kubectl describe hpa django-app-django -n default
 
 ### Jenkins CI/CD
 
-1. **Доступ до Jenkins**
-
-- URL адресу можна отримати за допомогою команди.
-  `kubectl -n jenkins get svc jenkins -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+#### 1. Доступ до Jenkins
+  - URL адресу можна отримати за допомогою команди.
+    `kubectl -n jenkins get svc jenkins -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
 
 - Пароль адміністратора заданий у `values.yaml` в секції `admin`.
 
-2. **Seed-job**
-
-- Після входу у Jenkins ви побачите pipeline job, який створює `goit-django-docker` пайплайн
-- **goit-django-docker** пайплайн:
-  - клонує GitHub-репозиторій (в поточній конфігурації - гілка lesson-4),
-  - будує Docker-образ,
-  - пушить у ECR,
-  - оновлює image.tag у файлі `charts/values.yaml` (гілка lesson-8-9), що призводить до деплою **django-app** в Argo CD.
+#### 2. Seed-job
+  - Після входу у Jenkins ви побачите pipeline job, який створює `goit-django-docker` пайплайн
+  - **goit-django-docker** пайплайн:
+    - клонує GitHub-репозиторій (в поточній конфігурації - гілка lesson-4),
+    - будує Docker-образ,
+    - пушить у ECR,
+    - оновлює image.tag у файлі `charts/values.yaml` (гілка lesson-8-9), що призводить до деплою **django-app** в Argo CD.
 
 ![Jenkins](images/jenkins.jpg)
 
 ### Argo CD
 
-1. **Доступ до Argo CD**
-
+#### 1. Доступ до Argo CD
 - URL адресу можна отримати за допомогою команди.
   `kubectl -n argocd get svc -l app.kubernetes.io/name=argocd-server -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}{" "}{.items[0].status.loadBalancer.ingress[0].hostname}'`
 
@@ -373,14 +370,12 @@ kubectl describe hpa django-app-django -n default
 
 ![Argo CD](images/argocd-app.jpg)
 
-2. **Репозиторії та застосунки**
+#### 2. Репозиторії та застосунки
+  - У `charts/templates/` описані ресурси:
+    - application.yaml – конфіг для django-app,
+    - repository.yaml – підключення GitHub репозиторію.
 
-- У `charts/templates/` описані ресурси:
-  - application.yaml – конфіг для django-app,
-  - repository.yaml – підключення GitHub репозиторію.
-
-3. **GitOps-потік**
-
-- Розробник пушить зміни у `values.yaml` (в поточній конфігурації - гілка lesson-8-9).
-- Argo CD синхронізує стан із кластером.
-- Автоматичне оновлення (self-heal) у випадку ручних змін у кластері.
+#### 3. GitOps-потік
+  - Розробник пушить зміни у `values.yaml` (в поточній конфігурації - гілка lesson-8-9).
+  - Argo CD синхронізує стан із кластером.
+  - Автоматичне оновлення (self-heal) у випадку ручних змін у кластері.
