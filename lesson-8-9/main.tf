@@ -28,7 +28,7 @@ module "eks" {
   cluster_name  = "eks-cluster-demo"        # Назва кластера
   subnet_ids    = module.vpc.public_subnets # ID підмереж
   instance_type = "t3.small"                # Тип інстансів
-  region        = "us-east-2"               # Регіон
+  region        = var.region                # Регіон
   desired_size  = 3                         # Бажана кількість нодів
   max_size      = 4                         # Максимальна кількість нодів
   min_size      = 2                         # Мінімальна кількість нодів
@@ -53,6 +53,8 @@ module "jenkins" {
   cluster_name      = module.eks.eks_cluster_name
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
+  github_user       = var.github_user
+  github_pat        = var.github_pat
 
   providers = {
     helm = helm
@@ -65,9 +67,11 @@ module "jenkins" {
 
 # Підключаємо модуль Argo CD
 module "argo_cd" {
-  source       = "./modules/argo-cd"
-  namespace    = "argocd"
+  source        = "./modules/argo-cd"
+  namespace     = "argocd"
   chart_version = "5.46.4"
+  github_user   = var.github_user
+  github_pat    = var.github_pat
 
   depends_on = [
     module.eks

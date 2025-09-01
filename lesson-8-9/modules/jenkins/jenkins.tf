@@ -1,21 +1,3 @@
-resource "kubernetes_storage_class_v1" "ebs_sc" {
-  metadata {
-    name = "ebs-sc"
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "true"
-    }
-  }
-
-  storage_provisioner = "ebs.csi.aws.com"
-
-  reclaim_policy      = "Delete"
-  volume_binding_mode = "WaitForFirstConsumer"
-
-  parameters = {
-    type = "gp3"
-  }
-}
-
 resource "kubernetes_service_account" "jenkins_sa" {
   metadata {
     name      = "jenkins-sa"
@@ -81,11 +63,13 @@ resource "helm_release" "jenkins" {
   create_namespace = true
 
   values = [
-    file("${path.module}/values.yaml")
+    templatefile("${path.module}/values.yaml", {
+      github_pat = var.github_pat
+      github_user    = var.github_user
+    })
   ]
 
   depends_on = [
-    kubernetes_storage_class_v1.ebs_sc,
     kubernetes_service_account.jenkins_sa,
     aws_iam_role.jenkins_kaniko_role
   ]

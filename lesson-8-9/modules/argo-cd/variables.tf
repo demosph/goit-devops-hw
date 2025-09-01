@@ -15,3 +15,14 @@ variable "chart_version" {
   type        = string
   default     = "5.46.4"
 }
+
+variable "github_user" {
+  description = "GitHub username"
+  type        = string
+}
+
+variable "github_pat" {
+  description = "GitHub Personal Access Token"
+  type        = string
+  sensitive   = true
+}

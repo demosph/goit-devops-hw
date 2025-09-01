@@ -19,7 +19,11 @@ resource "helm_release" "argo_apps" {
   create_namespace = false
 
   values = [
-    file("${path.module}/values.yaml")
+    templatefile("${path.module}/charts/values.yaml", {
+      github_pat  = var.github_pat
+      github_user = var.github_user
+    })
   ]
+
   depends_on = [helm_release.argo_cd]
 }

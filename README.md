@@ -1,21 +1,24 @@
 # Домашнє завдання до теми «Вивчення Agro CD + CD»
 
-Конфігурація Terraform з набором модулей для підготовки інфраструктури на AWS.
+Конфігурація Terraform з набором модулей для підготовки інфраструктури на AWS та розгортання Django застосунку.
 
 - **S3** бакет і **DynamoDB** таблиця для remote backend стану Terraform.
 - Базова **VPC** з публічними та приватними підмережами і маршрутизацією.
 - **ECR** репозиторій з авто-скануванням образів та політикою доступу.
 - **EKS** кластер з нод группою, IAM ролями та необхідними аддонами
+- **Jenkins** CI/CD сервер, seed-job, інтеграція з GitHub
+- **Argo CD** GitOps інструмент для відстежування конфігурації в репозиторії та автоматичного оновлення додатку
 - **Helm-чарт** Django-застосунку
 
 ### Структура проєкту
 
 ```
-lesson-7/
+lesson-8-9/
 │
 ├── main.tf                  # Головний файл для підключення модулів
 ├── backend.tf               # Налаштування бекенду для стейтів (S3 + DynamoDB)
 ├── outputs.tf               # Загальні виводи ресурсів
+├── variables.tf             # Загальні змінні
 │
 ├── modules/                 # Каталог з усіма модулями
 │   ├── s3-backend/          # Модуль для S3 та DynamoDB
@@ -37,7 +40,7 @@ lesson-7/
 │   │
 │   ├── k8s-baseline/        # Модуль для налаштування Kubernetis кластера
 │   │   ├── storageclass.tf  # Створення gp3 StorageClass
-|   |   ├── versiones.tf
+|   |   └── versiones.tf
 |   |
 │   ├── eks/                 # Модуль для Kubernetes кластера
 │   │   ├── eks.tf           # Створення кластера
@@ -45,6 +48,26 @@ lesson-7/
 |   |   ├── addons.tf        # Додатки для EKS
 │   │   ├── variables.tf     # Змінні для EKS
 │   │   └── outputs.tf       # Виведення інформації про кластер
+│   │
+│   ├── jenkins/             # Модуль для Helm-установки Jenkins
+│   │   ├── jenkins.tf       # Helm release для Jenkins
+│   │   ├── variables.tf     # Змінні (ресурси, креденшели, values)
+│   │   ├── providers.tf     # Оголошення провайдерів
+│   │   ├── values.yaml      # Конфігурація jenkins
+│   │   └── outputs.tf       # Виводи (URL, пароль адміністратора)
+│   │
+│   └── argo_cd/             # Mодуль для Helm-установки Argo CD
+│       ├── jenkins.tf       # Helm release для Jenkins
+│       ├── variables.tf     # Змінні (версія чарта, namespace, repo URL тощо)
+│       ├── providers.tf     # Kubernetes+Helm.  переносимо з модуля jenkins
+│       ├── values.yaml      # Кастомна конфігурація Argo CD
+│       ├── outputs.tf       # Виводи (hostname, initial admin password)
+│		    └──charts/               # Helm-чарт для створення app'ів
+│ 	 	    ├── Chart.yaml
+│	  	    ├── values.yaml
+│			    └── templates/         # Список applications, repositories
+│		        ├── application.yaml
+│		        └── repository.yaml
 │
 ├── charts/
 │   └── django-app/
@@ -61,22 +84,18 @@ lesson-7/
 
 **Передумови:**
 
-- AWS CLI v2 або AWS Tools for PowerShell (одне з двох має бути встановлене)
+- AWS CLI v2
 - Облікові дані з правами на: S3, DynamoDB, VPC, Subnet, Internet Gateway, Route Table, ECR.
 
 **Налаштування облікових даних (тимчасові STS-токени)**
 
-Можна використати або PowerShell AWS Tools, або AWS CLI
+Можна використати або змінні середовища PowerShell, або AWS CLI
 
-**PowerShell (AWS Tools for PowerShell):**
+**PowerShell:**
 
 ```
-# Отримати тимчасові креденшіали (2 години)
-$creds = Get-STSSessionToken -AccessKey <AWS_ACCESS_KEY> -SecretKey <AWS_SECRET_KEY> -DurationInSeconds 7200
-
-$env:AWS_ACCESS_KEY_ID     = $creds.AccessKeyId
-$env:AWS_SECRET_ACCESS_KEY = $creds.SecretAccessKey
-$env:AWS_SESSION_TOKEN     = $creds.SessionToken
+$env:AWS_ACCESS_KEY_ID     = <AWS_ACCESS_KEY>
+$env:AWS_SECRET_ACCESS_KEY = <AWS_SECRET_KEY>
 
 # (опційно) регіон
 $env:AWS_REGION = "us-east-2"
@@ -130,9 +149,6 @@ terraform apply
 4. Знищення ресурсів
 
 ```
-# Оновлення токена для kubernetes провайдера
-terraform apply -refresh-only -target="data.aws_eks_cluster_auth.demo"
-
 # Знищення всіх ресурсів
 terraform destroy
 ```
@@ -192,9 +208,44 @@ terraform destroy
   - **EKS Pod Identity Agent** (`eks-pod-identity-agent`) — видача AWS-креденшіалів подам без OIDC/IRSA.
   - **metrics-server** — збір метрик CPU/Memory для kubectl top та HPA.
 
-**Навіщо:** керований Kubernetes-кластер на AWS з мінімально необхідними IAM-ролями/політиками та одним керованим пулом вузлів.
-**Ключові ресурси:** `aws_iam_role`, `aws_iam_role_policy_attachment`, `aws_eks_cluster`, `aws_eks_node_group`.
-**Виводи:** `repository_url`, `repository_arn`, `repository_name`
+- **Навіщо:** керований Kubernetes-кластер на AWS з мінімально необхідними IAM-ролями/політиками та одним керованим пулом вузлів.
+- **Ключові ресурси:** `aws_iam_role`, `aws_iam_role_policy_attachment`, `aws_eks_cluster`, `aws_eks_node_group`.
+- **Виводи:** `repository_url`, `repository_arn`, `repository_name`
+
+#### jenkins
+
+- **Що створює:**
+
+  - **Helm release Jenkins** у кластері EKS з використанням офіційного чарта.
+  - **Namespace** для Jenkins.
+  - **Values.yaml** з базовою конфігурацією.
+
+- **Навіщо:** забезпечує централізований **CI/CD сервер** для:
+
+  - побудови Docker-образів і пушу їх у ECR,
+  - інтеграції з GitHub,
+  - запуску pipeline (seed-job) для подальшого розгортання застосунків у Kubernetes.
+
+- **Ключові ресурси:** `helm_release.jenkins`, `kubernetes_service_account.jenkins_sa`, `aws_iam_role.jenkins_kaniko_role`, `aws_iam_role_policy.jenkins_ecr_policy`.
+- **Виводи:** Ім'я Jenkins релізу, ім'я Jenkins namespace.
+
+#### argo_cd
+
+- **Що створює:**
+
+  - **Helm release Argo CD** у виділеному namespace.
+  - **Values.yaml** з базовими налаштуваннями.
+  - **Helm subchart** (charts/) для опису:
+    - **Applications** (django-app),
+    - **Repositories** (GitHub репозиторій).
+
+- **Навіщо:** забезпечує **GitOps-підхід**:
+
+  - відстежує зміни в GitHub-репозиторії (Helm-чарти/values),
+  - автоматично застосовує зміни у кластері (Continuous Deployment).
+
+- **Ключові ресурси:** `helm_release.argo_cd`, `helm_release.argo_apps`
+- **Виводи:** ім'я сервісу Argo CD, пароль адміністратора.
 
 ### Розгортання через Helm: PostgreSQL + Django + HPA
 
@@ -287,3 +338,49 @@ kubectl top pods -n default
 kubectl get hpa -n default
 kubectl describe hpa django-app-django -n default
 ```
+
+### Jenkins CI/CD
+
+1. **Доступ до Jenkins**
+
+- URL адресу можна отримати за допомогою команди.
+  `kubectl -n jenkins get svc jenkins -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+
+- Пароль адміністратора заданий у `values.yaml` в секції `admin`.
+
+2. **Seed-job**
+
+- Після входу у Jenkins ви побачите pipeline job, який створює `goit-django-docker` пайплайн
+- **goit-django-docker** пайплайн:
+  - клонує GitHub-репозиторій (в поточній конфігурації - гілка lesson-4),
+  - будує Docker-образ,
+  - пушить у ECR,
+  - оновлює image.tag у файлі `charts/values.yaml` (гілка lesson-8-9), що призводить до деплою **django-app** в Argo CD.
+
+![Jenkins](images/jenkins.jpg)
+
+### Argo CD
+
+1. **Доступ до Argo CD**
+
+- URL адресу можна отримати за допомогою команди.
+  `kubectl -n argocd get svc -l app.kubernetes.io/name=argocd-server -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}{" "}{.items[0].status.loadBalancer.ingress[0].hostname}'`
+
+- Початковий пароль адміністратора можна отримати з секрету:
+  `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64`
+
+Після входу додаток має мати статус Healthy:
+
+![Argo CD](images/argocd-app.jpg)
+
+2. **Репозиторії та застосунки**
+
+- У `charts/templates/` описані ресурси:
+  - application.yaml – конфіг для django-app,
+  - repository.yaml – підключення GitHub репозиторію.
+
+3. **GitOps-потік**
+
+- Розробник пушить зміни у `values.yaml` (в поточній конфігурації - гілка lesson-8-9).
+- Argo CD синхронізує стан із кластером.
+- Автоматичне оновлення (self-heal) у випадку ручних змін у кластері.
