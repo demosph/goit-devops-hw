@@ -84,7 +84,7 @@ module "rds" {
   source = "./modules/rds"
 
   name                  = "django-db"
-  use_aurora            = true
+  use_aurora            = false
   aurora_instance_count = 2
 
   # --- Aurora-only ---
