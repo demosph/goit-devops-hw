@@ -1,0 +1,29 @@
+applications:
+  - name: django-app
+    namespace: argocd
+    project: default
+    source:
+      repoURL: https://github.com/demosph/goit-devops-hw.git
+      path: lesson-8-9/charts/django-app
+      targetRevision: lesson-8-9
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: default
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+
+repositories:
+  - name: django-app
+    namespace: argocd
+    url: https://github.com/demosph/goit-devops-hw.git
+    username: ${github_user}
+    password: ${github_pat}
+
+repoConfig:
+  insecure: "true"
+  enableLfs: "true"
