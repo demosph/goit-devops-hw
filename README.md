@@ -390,3 +390,152 @@ psql --host=django_db.xxxxxxxxx.us-east-2.rds.amazonaws.com \
      --username=django_user \
      --dbname=django_db
 ```
+
+#### 2. Використання модуля
+
+**Приклад 1: RDS база даних PostgreSQL**
+
+```hcl
+module "rds" {
+  source = "./modules/rds"
+
+  name                  = "django-db"
+  use_aurora            = false
+  aurora_instance_count = 2
+
+  # --- Aurora-only ---
+  engine_cluster                = "aurora-postgresql"
+  engine_version_cluster        = "15.3"
+  parameter_group_family_aurora = "aurora-postgresql15"
+
+  # --- RDS-only ---
+  engine                     = "postgres"
+  engine_version             = "17.2"
+  parameter_group_family_rds = "postgres17"
+
+  # Common
+  instance_class          = "db.t3.micro"
+  allocated_storage       = 20
+  db_name                 = "django_db"
+  username                = "django_user"
+  password                = "pass9764gd"
+  subnet_private_ids      = module.vpc.private_subnets
+  subnet_public_ids       = module.vpc.public_subnets
+  skip_final_snapshot     = true
+  publicly_accessible     = true
+  vpc_id                  = module.vpc.vpc_id
+  multi_az                = true
+  backup_retention_period = 7
+  parameters = {
+    max_connections = "100"
+    log_statement   = "all"
+    work_mem        = "4096"
+  }
+
+  tags = {
+    Environment = "dev"
+    Project     = "django-app"
+  }
+}
+```
+
+**Приклад 2: Aurora PostgreSQL кластер**
+
+```hcl
+module "rds" {
+  source = "./modules/rds"
+
+  name                  = "django-db"
+  use_aurora            = true
+  aurora_instance_count = 2
+
+  # --- Aurora-only ---
+  engine_cluster                = "aurora-postgresql"
+  engine_version_cluster        = "15.3"
+  parameter_group_family_aurora = "aurora-postgresql15"
+
+  # --- RDS-only ---
+  engine                     = "postgres"
+  engine_version             = "17.2"
+  parameter_group_family_rds = "postgres17"
+
+  # Common
+  instance_class          = "db.t3.micro"
+  allocated_storage       = 20
+  db_name                 = "django_db"
+  username                = "django_user"
+  password                = "pass9764gd"
+  subnet_private_ids      = module.vpc.private_subnets
+  subnet_public_ids       = module.vpc.public_subnets
+  skip_final_snapshot     = true
+  publicly_accessible     = true
+  vpc_id                  = module.vpc.vpc_id
+  multi_az                = true
+  backup_retention_period = 7
+  parameters = {
+    max_connections = "100"
+    log_statement   = "all"
+    work_mem        = "4096"
+  }
+
+  tags = {
+    Environment = "dev"
+    Project     = "django-app"
+  }
+}
+```
+
+Змінна `use_aurora` контролює який саме кластер буде створено - RDS чи Aurora
+
+#### 3. Змінні
+
+**Основні змінні**
+
+| Змінна                           | Опис                                                             | Тип      | За замовчуванням      | Обов'язкова |
+| ---------------------------------| ---------------------------------------------------------------- | -------- | --------------------- | ----------- |
+| `name`                           | Назва RDS інстансу або Aurora кластеру                           | `string` | -                     | Так         |
+| `use_aurora`                     | Створити Aurora кластер (true) чи звичайний RDS кластер (false)  | `bool`   | `false`               | Ні          |
+| `engine`                         | Тип бази даних: postgres, mysql, aurora-postgresql, aurora-mysql | `string` | `postgres`            | Ні          |
+| `engine_version`                 | Версія бази даних                                                | `string` | `null`                | Ні          |
+| `instance_class`                 | Тип інстансу                                                     | `string` | `db.t3.micro`         | Ні          |
+| `allocated_storage`              | Розмір диску для DB інстансу                                     | `number` | `20`                  | Ні          |
+| `aurora_instance_count`          | Кількість інстансів в Aurora кластері                            | `number` | `2`                   | Ні          |
+| `skip_final_snapshot`            | Чи скіпати фінальний снапшот при знищенні кластера               | `bool`   | `false`               | Ні          |
+| `publicly_accessible`            | Публічний доступ до кластеру                                     | `bool`   | `false`               | Ні          |
+| `backup_retention_period`        | Час зберігання бекапів                                           | `number` | `""`                  | Ні          |
+| `parameter_group_family_rds   `  | визначає механізм бази даних та сімейство версій для RDS         | `string` | `postgres15`          | Ні          |
+| `parameter_group_family_aurora`  | визначає механізм бази даних та сімейство версій для Aurora      | `string` | `aurora-postgresql15` | Ні          |
+
+**Мережеві змінні**
+
+| Змінна                       | Опис                                           | Тип            | За замовчуванням | Обов'язкова |
+| ---------------------------- | ---------------------------------------------- | -------------- | ---------------- | ----------- |
+| `vpc_id`                     | VPC ID де буде створена база даних             | `string`       | -                | Так         |
+| `subnet_private_ids`         | Список subnet IDs для DB subnet group          | `list(string)` | -                | Так         |
+| `subnet_public_ids`          | Список subnet IDs для DB public subnet group   | `list(string)` | -                | Так         |
+| `multi_az`                   | Реплікація даних між зонами доступності (AZ)   | `bool`         | `false`          | Ні          |
+
+**Змінні бази даних**
+
+| Змінна            | Опис                         | Тип      | За замовчуванням                             | Обов'язкова |
+| ----------------- | ---------------------------- | -------- | -------------------------------------------- | ----------- |
+| `db_name`         | Назва бази даних             | `string` | `null`                                       | Ні          |
+| `username`        | Ім'я головного користувача   | `string` | `dbadmin`                                    | Ні          |
+| `password`        | Пароль головного користувача | `string` | `null`                                       | Ні          |
+
+**Змінні параметрів**
+
+| Змінна                   | Опис                      | Тип           | За замовчуванням         | Обов'язкова |
+| ------------------------ | ------------------------- | ------------- | ------------------------ | ----------- |
+| `parameters`             | Параметри бази даних      | `map(string)` | Див. нижче               | Ні          |
+| `parameter_group_family` | Сімейство parameter group | `string`      | Автоматично визначається | Ні          |
+
+Параметри за замовчуванням:
+
+```hcl
+{
+  max_connections = "100"
+  log_statement   = "all"
+  work_mem        = "4096"
+}
+```
