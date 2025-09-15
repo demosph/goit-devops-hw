@@ -395,8 +395,8 @@ kubectl top pods -n default
 Перевіряємо HPA:
 
 ```
-kubectl get hpa -n default
-kubectl describe hpa django-app-django -n default
+kubectl get hpa -n apps
+kubectl describe hpa django-app-django -n apps
 ```
 
 ### Jenkins CI/CD
@@ -421,9 +421,11 @@ kubectl describe hpa django-app-django -n default
 
 #### 1. Доступ до Argo CD
 - URL адресу можна отримати за допомогою команди.
+  
   `kubectl -n argocd get svc -l app.kubernetes.io/name=argocd-server -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}{.items[0].status.loadBalancer.ingress[0].hostname}'`
 
 - Початковий пароль адміністратора можна отримати з секрету:
+
   `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`
 
 Після входу додаток має мати статус Healthy:
@@ -465,6 +467,7 @@ psql --host=django_db.xxxxxxxxx.us-east-2.rds.amazonaws.com \
 #### 1. Доступ до Grafana
 
 - URL адресу можна отримати за допомогою команди.
+  
   `kubectl -n monitoring get svc prometheus-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
 
 - Пароль адміністратора заданий через змінну `grafana_admin_password`
@@ -472,3 +475,4 @@ psql --host=django_db.xxxxxxxxx.us-east-2.rds.amazonaws.com \
 Після входу перейдіть в Dashboards і відкрийте той який вам потрібен, наприклад **Kubernetes / Compute Resources / Namespace (Pods)**
 
 ![Grafana](images/grafana.jpg)
+
