@@ -38,6 +38,7 @@ controller:
     - docker-plugin:latest
     - docker-workflow:latest
     - job-dsl:latest
+    - prometheus:latest
 
   serviceAccount:
     name: jenkins-sa

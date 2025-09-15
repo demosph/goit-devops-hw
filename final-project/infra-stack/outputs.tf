@@ -76,6 +76,14 @@ output "eks_addons" {
   value       = module.eks.eks_addons
 }
 
+output "oidc_provider_arn" {
+  value = module.eks.oidc_provider_arn
+}
+
+output "oidc_provider_url" {
+  value = module.eks.oidc_provider_url
+}
+
 #-------------RDS-----------------
 
 output "rds_endpoint" {

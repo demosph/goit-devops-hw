@@ -31,7 +31,7 @@ resource "aws_security_group" "rds" {
 resource "aws_ssm_parameter" "pg_host" {
   name  = "/apps/django/postgres/host"
   type  = "String"
-  value = var.use_aurora ? aws_rds_cluster.aurora[0].endpoint : aws_db_instance.standard[0].endpoint
+  value = var.use_aurora ? split(":", aws_rds_cluster.aurora[0].endpoint)[0] : split(":", aws_db_instance.standard[0].endpoint)[0]
 }
 
 resource "aws_ssm_parameter" "pg_user" {

@@ -51,8 +51,14 @@ final-project/
 │   │   ├── storageclass.tf  # Створення gp3 StorageClass
 |   |   └── versiones.tf
 |   |
+│   ├── k8s-external-secrets  # Модуль інтеграції з External Secrets Operator
+│   │   ├── manifests.tf      # Опис ClusterSecretStore та ExternalSecret для RDS параметрів
+|   |   └── providers.tf
+|   |   └── variables.tf
+|   |
 │   ├── eks/                 # Модуль для Kubernetes кластера
 │   │   ├── eks.tf           # Створення кластера
+|   |   ├── eso.tf           # Налаштування External Secrets для EKS
 |   |   ├── nodes.tf         # Группа вокер-нодів та IAM-ролі для неї
 |   |   ├── addons.tf        # Додатки для EKS
 │   │   ├── variables.tf     # Змінні для EKS
@@ -95,7 +101,7 @@ final-project/
 │       ├── Chart.yaml
 │       └── values.yaml     # ConfigMap зі змінними середовища
 │
-└──Django/
+└──Django/                  # Django застосунок
 			 ├── goit/
 			 ├── Dockerfile
 			 ├── Jenkinsfile
@@ -103,6 +109,13 @@ final-project/
 ```
 
 ### Налаштування середовища і запуск розгортання інфраструктури
+
+Інфраструктура розділена на два окремих Terraform-стеки:
+
+- `infra-stack` — базова інфраструктура (мережа, безпека, RDS).
+- `apps-stack` — застосунки у кластері EKS (Django-app, Helm-чарти, інтеграція з RDS).
+
+Таке розділення дозволяє спростити керування залежностями: спочатку створюється база даних, після чого застосунок отримує її endpoint через зовнішні секрети.
 
 **Передумови:**
 
@@ -350,13 +363,13 @@ terraform destroy
 
 ```
 # з кореня проєкту
-helm upgrade --install django-app ./charts/django-app -n default -f ./charts/django-app/values.yaml
+helm upgrade --install django-app ./charts/django-app -n apps -f ./charts/django-app/values.yaml
 
 # очікуємо успішний rollout
-kubectl rollout status deploy/django-app-django -n default
+kubectl rollout status deploy/django-app-django -n apps
 
 # подивитись логи застосунку
-kubectl logs deploy/django-app-django -n default --tail=100
+kubectl logs deploy/django-app-django -n apps --tail=100
 ```
 
 Якщо ви щойно запушили новий тег образу, передайте його через `--set image.tag=<tag>`.
@@ -364,7 +377,7 @@ kubectl logs deploy/django-app-django -n default --tail=100
 
 #### 4. Отримати публічний hostname застосунку
 
-`kubectl get svc django-app-django -n default -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}'`
+`kubectl get svc django-app-django -n apps -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}'`
 
 Відкривайте у браузері:
 
@@ -445,98 +458,6 @@ psql --host=django_db.xxxxxxxxx.us-east-2.rds.amazonaws.com \
 
 #### 2. Використання модуля
 
-**Приклад 1: RDS база даних PostgreSQL**
-
-```hcl
-module "rds" {
-  source = "./modules/rds"
-
-  name                  = "django-db"
-  use_aurora            = false
-  aurora_instance_count = 2
-
-  # --- Aurora-only ---
-  engine_cluster                = "aurora-postgresql"
-  engine_version_cluster        = "15.3"
-  parameter_group_family_aurora = "aurora-postgresql15"
-
-  # --- RDS-only ---
-  engine                     = "postgres"
-  engine_version             = "17.2"
-  parameter_group_family_rds = "postgres17"
-
-  # Common
-  instance_class          = "db.t3.micro"
-  allocated_storage       = 20
-  db_name                 = "django_db"
-  username                = "django_user"
-  password                = "pass9764gd"
-  subnet_private_ids      = module.vpc.private_subnets
-  subnet_public_ids       = module.vpc.public_subnets
-  skip_final_snapshot     = true
-  publicly_accessible     = true
-  vpc_id                  = module.vpc.vpc_id
-  multi_az                = true
-  backup_retention_period = 7
-  parameters = {
-    max_connections = "100"
-    log_statement   = "all"
-    work_mem        = "4096"
-  }
-
-  tags = {
-    Environment = "dev"
-    Project     = "django-app"
-  }
-}
-```
-
-**Приклад 2: Aurora PostgreSQL кластер**
-
-```hcl
-module "rds" {
-  source = "./modules/rds"
-
-  name                  = "django-db"
-  use_aurora            = true
-  aurora_instance_count = 2
-
-  # --- Aurora-only ---
-  engine_cluster                = "aurora-postgresql"
-  engine_version_cluster        = "15.3"
-  parameter_group_family_aurora = "aurora-postgresql15"
-
-  # --- RDS-only ---
-  engine                     = "postgres"
-  engine_version             = "17.2"
-  parameter_group_family_rds = "postgres17"
-
-  # Common
-  instance_class          = "db.t3.micro"
-  allocated_storage       = 20
-  db_name                 = "django_db"
-  username                = "django_user"
-  password                = "pass9764gd"
-  subnet_private_ids      = module.vpc.private_subnets
-  subnet_public_ids       = module.vpc.public_subnets
-  skip_final_snapshot     = true
-  publicly_accessible     = true
-  vpc_id                  = module.vpc.vpc_id
-  multi_az                = true
-  backup_retention_period = 7
-  parameters = {
-    max_connections = "100"
-    log_statement   = "all"
-    work_mem        = "4096"
-  }
-
-  tags = {
-    Environment = "dev"
-    Project     = "django-app"
-  }
-}
-```
-
 Змінна `use_aurora` контролює який саме кластер буде створено - RDS чи Aurora
 
 ### Моніторинг
@@ -544,7 +465,10 @@ module "rds" {
 #### 1. Доступ до Grafana
 
 - URL адресу можна отримати за допомогою команди.
-`kubectl -n monitoring get svc prometheus-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+  `kubectl -n monitoring get svc prometheus-grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
 
 - Пароль адміністратора заданий через змінну `grafana_admin_password`
 
+Після входу перейдіть в Dashboards і відкрийте той який вам потрібен, наприклад **Kubernetes / Compute Resources / Namespace (Pods)**
+
+![Grafana](images/grafana.jpg)

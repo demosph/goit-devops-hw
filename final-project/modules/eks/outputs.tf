@@ -26,10 +26,6 @@ output "oidc_provider_url" {
   value = aws_iam_openid_connect_provider.oidc.url
 }
 
-output "oidc_provider_issuer" {
-  value = aws_eks_cluster.eks.identity[0].oidc[0].issuer
-}
-
 output "eks_addons" {
   description = "Installed EKS addons"
   value = {

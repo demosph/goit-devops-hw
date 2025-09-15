@@ -51,8 +51,8 @@ module "monitoring" {
   source                    = "../modules/monitoring"
   namespace                 = "monitoring"
   grafana_admin_password    = var.grafana_admin_password
-  enable_jenkins_monitoring = true
-  enable_argocd_monitoring  = true
+  enable_jenkins_monitoring = false
+  enable_argocd_monitoring  = false
 
   providers = {
     kubernetes = kubernetes.eks

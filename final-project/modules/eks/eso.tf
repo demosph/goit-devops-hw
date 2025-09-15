@@ -69,7 +69,7 @@ resource "aws_iam_role_policy_attachment" "eso_irsa_attach" {
 
 # Configure ESO
 
-resource "helm_release" "external_sefcrets" {
+resource "helm_release" "external_secrets" {
   name       = "external-secrets"
   namespace  = var.eso_namespace
   repository = "https://charts.external-secrets.io"
