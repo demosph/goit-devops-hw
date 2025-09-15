@@ -105,7 +105,7 @@ final-project/
 			 ├── goit/
 			 ├── Dockerfile
 			 ├── Jenkinsfile
-       ├── requirements.txt
+             ├── requirements.txt
 ```
 
 ### Налаштування середовища і запуск розгортання інфраструктури
@@ -475,4 +475,5 @@ psql --host=django_db.xxxxxxxxx.us-east-2.rds.amazonaws.com \
 Після входу перейдіть в Dashboards і відкрийте той який вам потрібен, наприклад **Kubernetes / Compute Resources / Namespace (Pods)**
 
 ![Grafana](images/grafana.jpg)
+
 
